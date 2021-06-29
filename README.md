@@ -11,9 +11,9 @@ This config provides per-monitor virtual desktops. I use it with my laptop monit
 3. Use `modKeyShift + 1-9` to move windows between workspaces
 4. Extra windows on a workspace are stacked to the side. Press `modKey + r` to cycle through the windows on a workspace.
 
-This setup allows you assign your apps to workspaces, and quickly retrieve them on either monitor. And if you have a lot of Chrome windows like I do, you can just cycle through them.
+This setup allows you assign your apps to workspaces, and quickly retrieve them wherever you're looking. And if you have a lot of Chrome windows like I do, you can just cycle through them to find the right one.
 
-## Basic bindings
+## Bindings
 * `modKey + 1-9` Select workspace
 * `modKeyShift + 1-9` Move focused window to workspace
 * `modKey + Left/Right` Select left/right monitor
@@ -35,12 +35,14 @@ The active monitor is defined by the mouse position.
 
 Focus follows the mouse but can be turned off in config.ts
 
-Some apps do random things on focus, like focusing all their windows. You might need custom hacks to get a good experiece =(
+Some apps do random things on focus, like focusing all their windows (iterm? Keep them all on 1 worksapce). You might need custom hacks to get a good experiece =(
 
 ## Quick install
+```
 git clone https://github.com/nik3daz/spin2win.git
 cd spin2win
 ln -s \`pwd\`/out/phoenix.js ~/.phoenix.config.js 
+```
 
 ## Building
 
@@ -53,7 +55,7 @@ yarn run build
 
 The TypeScript compiler and Webpack will produce `out/phoenix.js` that can be used as Phoenix configuration. 
 
-For development, `yarn start` will run Webpack in watch-mode.
+For development, `yarn start` will run Webpack in watch-mode. The window manager state is stored across reloads for better continuous development. Comment out the loadState() call if things get borked.
 
 ## Debugging
 
