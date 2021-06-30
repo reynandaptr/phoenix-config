@@ -22,6 +22,7 @@ for (let [i, screen] of Screen.all().entries()) {
 }
 
 loadState();
+screens.sort((a, b) => a.screen.frame().x - b.screen.frame().x);
 
 for (let [i, s] of screens.entries()) {
   if (!s.workspace) {

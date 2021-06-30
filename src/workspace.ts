@@ -38,7 +38,6 @@ export class Workspace {
 
     let screen = this.screen.screen;
     let screenBounds = screen.flippedVisibleFrame();
-    log(screenBounds.x + ' ' + screenBounds.y + ' ' + screenBounds.width + ' ' + screenBounds.height);
     let mainWidth = screenBounds.width * this.mainRatio_;
     for (let i = this.windows.length - 1; i >= 0; i--) {
       let win = this.windows[i];
@@ -62,7 +61,6 @@ export class Workspace {
         win.setSize(bounds);
         win.setTopLeft(bounds);
       }
-      log(bounds.x + ' ' + bounds.y + ' ' + bounds.width + ' ' + bounds.height + ' ' + win.title());
       win.focus();
     }
     // if (this.windows.length > 0) {
@@ -71,12 +69,12 @@ export class Workspace {
     saveState();
   }
 
-  rotate() {
+  spin() {
     let x = this.windows.shift();
     if (x)
       this.windows.push(x);
     log(this.windows.map((w) => w.title()));
-    this.modal('Rotating ');
+    this.modal('Spinning ');
     this.render();
   }
 

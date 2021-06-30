@@ -20,8 +20,18 @@ Phoenix.set({
   openAtLogin: true,
 });
 
+function focusNextScreen(dir = 1) {
+  let idx = screens.findIndex(s => s === getActiveScreen());
+  let screen = screens[Math.max(0, Math.min(screens.length - 1, idx + dir))];
+  if (screen.workspace?.windows.length) {
+    focusWindow(screen.workspace.windows[0]);
+  } else {
+    Mouse.move(center(screen.screen.flippedFrame()));
+  }
+}
+
 onKey('right', modKey, () => {
-  focusWindow(screens[0].workspace?.windows[0]);
+  focusNextScreen(1);
 });
 onKey('right', modKeyShift, () => {
   let ws = screens[0].workspace;
@@ -32,7 +42,7 @@ onKey('right', modKeyShift, () => {
   focusWindow(ws.windows[0]);
 });
 onKey('left', modKey, () => {
-  focusWindow(screens[1].workspace?.windows[0]);
+  focusNextScreen(-1);
 });
 onKey('left', modKeyShift, () => {
   let ws = screens[1].workspace;
@@ -89,7 +99,7 @@ onKey('space', modKeyShift, () => {
 });
 
 onKey('r', modKey, () => {
-  getActiveWorkspace().rotate();
+  getActiveWorkspace().spin();
 });
 
 onKey('r', modKeyShift, () => {
@@ -181,7 +191,11 @@ Event.on('windowDidOpen', (w) => {
 });
 
 if (focusOnMouseMove) {
-  Event.on('mouseDidMove', (p) => {
+  Event.on('mouseDidMove', (p: any) => {
+    if (p.modifiers.find((m: string) => m === modKey[0])) {
+      return;
+    }
+
     let w = Window.recent().find(w => pointInsideFrame(p, w.frame()));
     w?.focus();
   });

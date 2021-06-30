@@ -33,15 +33,15 @@ The definition of `modKey` and `modKeyShift` can be found in [src/config.ts](src
 ## Notes
 The active monitor is defined by the mouse position.
 
-Focus follows the mouse but can be turned off in config.ts
+Focus follows the mouse but can be turned off temporarily by holding `modKey` or permanently in config.ts.
 
-Some apps do random things on focus, like focusing all their windows (iterm? Keep them all on 1 worksapce). You might need custom hacks to get a good experiece =(
+Some apps do random things on focus, like focusing all their windows. This whole thing is a bit janky. You might need custom hacks to get a good experience =( But it mostly works.
 
 ## Quick install
 ```
 git clone https://github.com/nik3daz/spin2win.git
 cd spin2win
-ln -s \`pwd\`/out/phoenix.js ~/.phoenix.config.js 
+ln -s `pwd`/out/phoenix.js ~/.phoenix.config.js 
 ```
 
 ## Building

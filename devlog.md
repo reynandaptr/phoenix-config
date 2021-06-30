@@ -29,3 +29,5 @@ Still haven't figured out if I should do something with existing windows, but de
 Did a lot of organization too and played around a bit. I'll upload everything tomorrow.
 
 I also need to make a non-mouse focus override (probably while pressing modKey). Holding cmd + tab works for now....
+
+Also, I should do better at window order detection and rotation. And focus empty workspaces reasonably w/ mod + L/R.
