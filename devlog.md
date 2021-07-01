@@ -31,3 +31,12 @@ Did a lot of organization too and played around a bit. I'll upload everything to
 I also need to make a non-mouse focus override (probably while pressing modKey). Holding cmd + tab works for now....
 
 Also, I should do better at window order detection and rotation. And focus empty workspaces reasonably w/ mod + L/R.
+
+## 30-06-21
+Did those things.
+
+Just need to do some startup experience stuff but that would mean shutting down my laptop :'(
+
+Also may as well check the single window experience.
+
+Add mod + space to activate workspace for focused window.

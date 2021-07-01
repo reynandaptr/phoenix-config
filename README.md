@@ -37,11 +37,13 @@ Focus follows the mouse but can be turned off temporarily by holding `modKey` or
 
 Some apps do random things on focus, like focusing all their windows. This whole thing is a bit janky. You might need custom hacks to get a good experience =( But it mostly works.
 
+Weird interaction with holding down keys to show accented letters. Run `defaults write -g ApplePressAndHoldEnabled -bool false` and reboot to disable.
+
 ## Quick install
 ```
 git clone https://github.com/nik3daz/spin2win.git
 cd spin2win
-ln -s `pwd`/out/phoenix.js ~/.phoenix.config.js 
+ln -s `pwd`/out/phoenix.js ~/.phoenix.js 
 ```
 
 ## Building

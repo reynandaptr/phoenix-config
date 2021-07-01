@@ -17,20 +17,28 @@ for (let i = 0; i <= 9; i++) {
 // We assume that the number of screens does not change. Just reload Phoenix.
 let initialFocus = Window.focused();
 let screens: Array<ScreenProxy> = [];
-for (let [i, screen] of Screen.all().entries()) {
-  screens.push(new ScreenProxy(screen, i));
-}
 
-loadState();
-screens.sort((a, b) => a.screen.frame().x - b.screen.frame().x);
-
-for (let [i, s] of screens.entries()) {
-  if (!s.workspace) {
-    s.activateWorkspace(i + 1);
+function initScreens() {
+  for (let ws of workspaces) {
+    ws.screen = null;
   }
+  screens = [];
+  for (let [i, screen] of Screen.all().entries()) {
+    screens.push(new ScreenProxy(screen, i));
+  }
+
+  loadState();
+  screens.sort((a, b) => a.screen.frame().x - b.screen.frame().x);
+
+  for (let [i, s] of screens.entries()) {
+    if (!s.workspace) {
+      s.activateWorkspace(i + 1);
+    }
+  }
+  focusWindow(initialFocus);
 }
 
-focusWindow(initialFocus);
+initScreens();
 
 function saveState() {
   let saveState = {
@@ -73,7 +81,7 @@ function loadState() {
       }
     }
     for (let s of (loadState.screens || [])) {
-      if (s.workspace) {
+      if (s.workspace && s.id < screens.length) {
         screens[s.id].activateWorkspace(s.workspace);
       }
     }
@@ -139,4 +147,5 @@ export {
   moveFocusedWindowToWorkspace,
   getActiveWorkspace,
   center,
+  initScreens,
 }

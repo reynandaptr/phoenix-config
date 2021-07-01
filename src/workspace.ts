@@ -13,7 +13,7 @@ export class Workspace {
   }
 
   set mainRatio(ratio: number) {
-    this.mainRatio_ = Math.max(Math.min(ratio, 0.98), 0);
+    this.mainRatio_ = Math.max(Math.min(ratio, 0.95), 0);
   }
 
   get mainRatio(): number {

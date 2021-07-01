@@ -11,6 +11,7 @@ import {
   moveFocusedWindowToWorkspace,
   getActiveWorkspace,
   center,
+  initScreens,
 } from './globals';
 import { focusOnMouseMove, modKey, modKeyShift } from './config';
 
@@ -63,8 +64,16 @@ onKey('h', modKey, () => {
   getActiveWorkspace().mainRatio -= 0.1;
   getActiveWorkspace().render();
 });
+onKey('h', modKeyShift, () => {
+  getActiveWorkspace().mainRatio -= 0.01;
+  getActiveWorkspace().render();
+});
 onKey('l', modKey, () => {
   getActiveWorkspace().mainRatio += 0.1;
+  getActiveWorkspace().render();
+});
+onKey('l', modKeyShift, () => {
+  getActiveWorkspace().mainRatio += 0.01;
   getActiveWorkspace().render();
 });
 
@@ -169,6 +178,10 @@ function focusNextWindow(dir = 1) {
   let windows = workspace.windows;
   focusWindow(windows[(workspace.findIndex(window) + dir + windows.length) % windows.length]);
 }
+
+Event.on('screensDidChange', () => {
+  initScreens();
+});
 
 Event.on('windowDidClose', (w) => {
   let ws = windowMap.get(w.hash());
