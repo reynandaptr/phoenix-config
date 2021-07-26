@@ -40,3 +40,5 @@ Just need to do some startup experience stuff but that would mean shutting down 
 Also may as well check the single window experience.
 
 Add mod + space to activate workspace for focused window.
+
+Gotta make an appDidLaunch and terminate handler because MacOSX doesn't understand that windows belong to apps????

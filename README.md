@@ -35,7 +35,7 @@ The active monitor is defined by the mouse position.
 
 Focus follows the mouse but can be turned off temporarily by holding `modKey` or permanently in config.ts.
 
-Some apps do random things on focus, like focusing all their windows. This whole thing is a bit janky. You might need custom hacks to get a good experience =( But it mostly works.
+Some apps do random things on focus, like focusing all their windows. This whole thing is a bit janky. You might need custom hacks to get a good experience =( But it mostly works. Rerendering or mashing `modKey + Up/Down` fixes a lot of issues.
 
 Weird interaction with holding down keys to show accented letters. Run `defaults write -g ApplePressAndHoldEnabled -bool false` and reboot to disable.
 

@@ -12,8 +12,10 @@ import {
   getActiveWorkspace,
   center,
   initScreens,
+  mouseMoveFocus,
+  setMouseMoveFocus,
 } from './globals';
-import { focusOnMouseMove, modKey, modKeyShift } from './config';
+import { modKey, modKeyShift } from './config';
 
 
 Phoenix.set({
@@ -21,9 +23,13 @@ Phoenix.set({
   openAtLogin: true,
 });
 
-function focusNextScreen(dir = 1) {
+function getNextScreen(dir = 1) {
   let idx = screens.findIndex(s => s === getActiveScreen());
-  let screen = screens[Math.max(0, Math.min(screens.length - 1, idx + dir))];
+  return screens[Math.max(0, Math.min(screens.length - 1, idx + dir))];
+}
+
+function focusNextScreen(dir = 1) {
+  let screen = getNextScreen(dir)
   if (screen.workspace?.windows.length) {
     focusWindow(screen.workspace.windows[0]);
   } else {
@@ -35,7 +41,7 @@ onKey('right', modKey, () => {
   focusNextScreen(1);
 });
 onKey('right', modKeyShift, () => {
-  let ws = screens[0].workspace;
+  let ws = getNextScreen().workspace;
   if (!ws) {
     return;
   }
@@ -46,7 +52,7 @@ onKey('left', modKey, () => {
   focusNextScreen(-1);
 });
 onKey('left', modKeyShift, () => {
-  let ws = screens[1].workspace;
+  let ws = getNextScreen(-1).workspace;
   if (!ws) {
     return;
   }
@@ -97,6 +103,20 @@ onKey('c', modKeyShift, () => {
   window?.close();
 });
 
+// Render focused window's workspace.
+onKey('space', modKey, () => {
+  let focused = Window.focused();
+  if (!focused) {
+    return;
+  }
+  let ws = workspaces.find(ws => focused && ws.findIndex(focused) != -1);
+  if (ws) {
+    getActiveScreen().activateWorkspace(ws.id);
+  } else {
+    getActiveScreen().vlog('No workspace for ' + focused.title(), false);
+  }
+});
+
 // Rerender current screens.
 onKey('space', modKeyShift, () => {
   let window = Window.focused();
@@ -128,6 +148,9 @@ onKey('r', modKeyShift, () => {
   Mouse.move(oldMousePos);
 });
 
+onKey('m', modKey, () => {
+  setMouseMoveFocus(!mouseMoveFocus);
+});
 
 for (let i = 0; i <= 9; i++) {
   onKey(i.toString(), modKey, () => {
@@ -193,26 +216,50 @@ Event.on('windowDidClose', (w) => {
 });
 
 Event.on('windowDidOpen', (w) => {
+  log('windowDidOpen ' + w.title() + ' APPNAME: ' + w.app().name() + ' HASH: ' + w.hash() + ' adding to: ' + getActiveWorkspace().id);
   if (!w.isVisible() || windowMap.get(w.hash())) {
     return;
   }
-  log('windowDidOpen ' + w.title() + ' APPNAME: ' + w.app().name() + ' HASH: ' + w.hash()) + ' adding to: ' + getActiveWorkspace().id;
+  log('windowDidOpen ' + w.title() + ' APPNAME: ' + w.app().name() + ' HASH: ' + w.hash() + ' adding to: ' + getActiveWorkspace().id);
   // Phoenix modals shouldn't be part of our system.
   if (w.app().name() != 'Phoenix') {
     getActiveWorkspace().addWindow(w, true);
   }
 });
 
-if (focusOnMouseMove) {
-  Event.on('mouseDidMove', (p: any) => {
-    if (p.modifiers.find((m: string) => m === modKey[0])) {
+Event.on('appDidLaunch', (a) => {
+    log('appDidLaunch ' +a.name() + ' HASH: ' + a.hash() + ' adding to: ' + getActiveWorkspace().id);
+    for (let w of a.windows()) {
+    if (!w.isVisible() || windowMap.get(w.hash())) {
       return;
     }
+    log('appDidLaunch ' + w.title() + ' APPNAME: ' + w.app().name() + ' HASH: ' + w.hash() + ' adding to: ' + getActiveWorkspace().id);
+    // Phoenix modals shouldn't be part of our system.
+    if (w.app().name() != 'Phoenix') {
+      getActiveWorkspace().addWindow(w, true);
+    }
+  }
+});
 
-    let w = Window.recent().find(w => pointInsideFrame(p, w.frame()));
-    w?.focus();
-  });
-}
+Event.on('appDidTerminate', (a) => {
+  for (let w of a.windows()) {
+    let ws = windowMap.get(w.hash());
+    if (!ws) {
+      return;
+    }
+    log('appDidTerminate ' + w.title() + ' APPNAME: ' + w.app().name() + ' HASH: ' + w.hash() + ' removing from: ' + ws.id);
+    ws.removeWindow(w);
+  }
+});
+
+Event.on('mouseDidMove', (p: any) => {
+  if (!mouseMoveFocus || p.modifiers.find((m: string) => m === modKey[0])) {
+    return;
+  }
+
+  let w = Window.recent().find(w => pointInsideFrame(p, w.frame()));
+  w?.focus();
+});
 
 // Debug keys.
 onKey('`', modKey, () => {

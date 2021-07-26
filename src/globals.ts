@@ -5,7 +5,7 @@ import log from './logger';
 
 let windowMap = new Map<number, Workspace>();
 
-
+let mouseMoveFocus = false;
 
 log(Window.all().map((w) => w.hash() + " " + w.title()));
 
@@ -44,6 +44,7 @@ function saveState() {
   let saveState = {
     workspaces: [] as Array<Object>,
     screens: [] as Array<Object>,
+    mouseMoveFocus: mouseMoveFocus,
   };
   for (let s of screens) {
     saveState.screens.push({
@@ -85,9 +86,14 @@ function loadState() {
         screens[s.id].activateWorkspace(s.workspace);
       }
     }
+    mouseMoveFocus = !!loadState.mouseMoveFocus;
   }
 }
 
+function setMouseMoveFocus(enabled: boolean) {
+  mouseMoveFocus = enabled;
+  getActiveScreen().vlog('Mouse focus ' + (enabled ? 'enabled' : 'disabled'), false);
+}
 
 function getActiveScreen(): ScreenProxy {
   let pos = Mouse.location();
@@ -142,10 +148,12 @@ export {
   workspaces,
   screens,
   windowMap,
+  mouseMoveFocus,
   focusWindow,
   saveState,
   moveFocusedWindowToWorkspace,
   getActiveWorkspace,
   center,
   initScreens,
+  setMouseMoveFocus,
 }
