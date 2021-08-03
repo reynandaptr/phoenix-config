@@ -42,3 +42,13 @@ Also may as well check the single window experience.
 Add mod + space to activate workspace for focused window.
 
 Gotta make an appDidLaunch and terminate handler because MacOSX doesn't understand that windows belong to apps????
+
+## 05-07-21
+Things mostly work, but there's a bunch of jank. Somehow I'm not receiving windowOpen events anymore.
+
+I should add a key to 'unhide' all windows and to disable the hiding somehow.
+
+I think this is in a reasonable state to publish, with a couple more controls for being able to wrangle broken states. This just needs some cleanup and we're good to go.
+
+## 03-08-21
+Adding a 'collect all windows of focused app onto active workspace' button.

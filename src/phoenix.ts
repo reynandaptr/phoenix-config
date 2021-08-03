@@ -8,12 +8,14 @@ import {
   screens,
   windowMap,
   focusWindow,
+  autoAddWindows,
   moveFocusedWindowToWorkspace,
   getActiveWorkspace,
   center,
   initScreens,
   mouseMoveFocus,
   setMouseMoveFocus,
+  setAutoAddWindows,
 } from './globals';
 import { modKey, modKeyShift } from './config';
 
@@ -84,14 +86,26 @@ onKey('l', modKeyShift, () => {
 });
 
 // Collect current window into active workspace.
-onKey('return', modKeyShift, () => {
+onKey('return', modKey, () => {
   let window = Window.focused();
   if (window) {
     getActiveWorkspace().addWindow(window);
   }
 });
 
-onKey('delete', modKeyShift, () => {
+onKey('return', modKeyShift, () => {
+  let window = Window.focused();
+  if (!window) {
+    return;
+  }
+  for (let w of window.app().windows()) {
+    if (!windowMap.has(w.hash())) {
+      getActiveWorkspace().addWindow(w);  
+    }
+  }
+});
+
+onKey('delete', modKey, () => {
   let window = Window.focused();
   if (window) {
     getActiveWorkspace().removeWindow(window);
@@ -148,9 +162,15 @@ onKey('r', modKeyShift, () => {
   Mouse.move(oldMousePos);
 });
 
+
 onKey('m', modKey, () => {
   setMouseMoveFocus(!mouseMoveFocus);
 });
+
+onKey('a', modKey, () => {
+  setAutoAddWindows(!autoAddWindows);
+});
+
 
 for (let i = 0; i <= 9; i++) {
   onKey(i.toString(), modKey, () => {

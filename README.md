@@ -22,10 +22,12 @@ This setup allows you assign your apps to workspaces, and quickly retrieve them 
 * `modKeyShift + r` Spin workspaces across monitors
 * `modKey + h/l` Decrease/increase the main area size
 * `modKey + up/down/j/k` Focus next/previous window on current workspace
-* `modKeyShift + return` Add focused window to current workspace
-* `modKeyShift + backspace` Remove focused window from workspace
+* `modKey + return` Add focused window to current workspace
+* `modKeyShift + return` Add all stray windows of focused app to current workspace (good for )
+* `modKey + backspace` Remove focused window from workspace
 * `modKeyShift + c` Close focused window
 * `modKeyShift + space` Rerender current layout. Useful if you drag around windows and can't figure out what belongs where. Or if things go haywire.
+* `modKey + m` Enable/disable focus follow mouse.
 
 ## Key bindings
 The definition of `modKey` and `modKeyShift` can be found in [src/config.ts](src/config.ts). Otherwise modify keys in phoenix.ts.

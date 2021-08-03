@@ -6,6 +6,7 @@ import log from './logger';
 let windowMap = new Map<number, Workspace>();
 
 let mouseMoveFocus = false;
+let autoAddWindows = true;
 
 log(Window.all().map((w) => w.hash() + " " + w.title()));
 
@@ -45,6 +46,7 @@ function saveState() {
     workspaces: [] as Array<Object>,
     screens: [] as Array<Object>,
     mouseMoveFocus: mouseMoveFocus,
+    autoAddWindows: autoAddWindows,
   };
   for (let s of screens) {
     saveState.screens.push({
@@ -87,12 +89,18 @@ function loadState() {
       }
     }
     mouseMoveFocus = !!loadState.mouseMoveFocus;
+    autoAddWindows = !!loadState.autoAddWindows;
   }
 }
 
 function setMouseMoveFocus(enabled: boolean) {
   mouseMoveFocus = enabled;
   getActiveScreen().vlog('Mouse focus ' + (enabled ? 'enabled' : 'disabled'), false);
+}
+
+function setAutoAddWindows(enabled: boolean) {
+  autoAddWindows = enabled;
+  getActiveScreen().vlog('Auto-add windows ' + (enabled ? 'enabled' : 'disabled'), false);
 }
 
 function getActiveScreen(): ScreenProxy {
@@ -151,9 +159,11 @@ export {
   mouseMoveFocus,
   focusWindow,
   saveState,
+  autoAddWindows,
   moveFocusedWindowToWorkspace,
   getActiveWorkspace,
   center,
   initScreens,
   setMouseMoveFocus,
+  setAutoAddWindows,
 }
