@@ -23,11 +23,12 @@ This setup allows you assign your apps to workspaces, and quickly retrieve them 
 * `modKey + h/l` Decrease/increase the main area size
 * `modKey + up/down/j/k` Focus next/previous window on current workspace
 * `modKey + return` Add focused window to current workspace
-* `modKeyShift + return` Add all stray windows of focused app to current workspace (good for )
+* `modKeyShift + return` Add all stray windows of focused app to current workspace (good for collecting apps on first run)
 * `modKey + backspace` Remove focused window from workspace
 * `modKeyShift + c` Close focused window
 * `modKeyShift + space` Rerender current layout. Useful if you drag around windows and can't figure out what belongs where. Or if things go haywire.
-* `modKey + m` Enable/disable focus follow mouse.
+* `modKey + a` Enable/disable auto-adding windows to current workspace (janky).
+* `modKey + m` Enable/disable focus follow mouse (janky).
 
 ## Key bindings
 The definition of `modKey` and `modKeyShift` can be found in [src/config.ts](src/config.ts). Otherwise modify keys in phoenix.ts.
