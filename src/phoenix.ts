@@ -1,316 +1,185 @@
-import { pointInsideFrame } from './calc';
-import { onKey } from './key';
-import log from './logger';
-import { Workspace } from './workspace';
-import {
-  getActiveScreen,
-  workspaces,
-  screens,
-  windowMap,
-  focusWindow,
-  autoAddWindows,
-  moveFocusedWindowToWorkspace,
-  getActiveWorkspace,
-  center,
-  initScreens,
-  mouseMoveFocus,
-  setMouseMoveFocus,
-  setAutoAddWindows,
-} from './globals';
-import { modKey, modKeyShift } from './config';
-
-
 Phoenix.set({
   daemon: false,
-  openAtLogin: true,
-});
+  openAtLogin: false,
+})
 
-function getNextScreen(dir = 1) {
-  let idx = screens.findIndex(s => s === getActiveScreen());
-  return screens[Math.max(0, Math.min(screens.length - 1, idx + dir))];
+type AppState = {
+  appName: string
+  allowFullScreen: boolean
+  screenIdentifier: string
+  singleScreenOrder: number
+  dualScreenOrder: number
 }
 
-function focusNextScreen(dir = 1) {
-  let screen = getNextScreen(dir)
-  if (screen.workspace?.windows.length) {
-    focusWindow(screen.workspace.windows[0]);
-  } else {
-    Mouse.move(center(screen.screen.flippedFrame()));
-  }
-}
-
-onKey('right', modKey, () => {
-  focusNextScreen(1);
-});
-onKey('right', modKeyShift, () => {
-  let ws = getNextScreen().workspace;
-  if (!ws) {
-    return;
-  }
-  moveFocusedWindowToWorkspace(ws.id);
-  focusWindow(ws.windows[0]);
-});
-onKey('left', modKey, () => {
-  focusNextScreen(-1);
-});
-onKey('left', modKeyShift, () => {
-  let ws = getNextScreen(-1).workspace;
-  if (!ws) {
-    return;
-  }
-  moveFocusedWindowToWorkspace(ws.id);
-  focusWindow(ws.windows[0]);
-});
-onKey('down', modKey, () => focusNextWindow());
-onKey('j', modKey, () => focusNextWindow());
-
-onKey('up', modKey, () => focusNextWindow(-1));
-onKey('k', modKey, () => focusNextWindow(-1));
-
-
-onKey('h', modKey, () => {
-  getActiveWorkspace().mainRatio -= 0.1;
-  getActiveWorkspace().render();
-});
-onKey('h', modKeyShift, () => {
-  getActiveWorkspace().mainRatio -= 0.01;
-  getActiveWorkspace().render();
-});
-onKey('l', modKey, () => {
-  getActiveWorkspace().mainRatio += 0.1;
-  getActiveWorkspace().render();
-});
-onKey('l', modKeyShift, () => {
-  getActiveWorkspace().mainRatio += 0.01;
-  getActiveWorkspace().render();
-});
-
-// Collect current window into active workspace.
-onKey('return', modKey, () => {
-  let window = Window.focused();
-  if (window) {
-    getActiveWorkspace().addWindow(window);
-  }
-});
-
-onKey('return', modKeyShift, () => {
-  let window = Window.focused();
-  if (!window) {
-    return;
-  }
-  for (let w of window.app().windows()) {
-    if (!windowMap.has(w.hash())) {
-      getActiveWorkspace().addWindow(w);  
+const rearrangeWorkspace = (appStates: AppState[], focusApps: string[], screenCnt: number) => {
+  const missingApps: string[] = []
+  const sortedAppStates: AppState[] = appStates.sort((a, b) => {
+    if (screenCnt === 2) {
+      return a.dualScreenOrder - b.dualScreenOrder
     }
+    return a.singleScreenOrder - b.singleScreenOrder
+  })
+  sortedAppStates.forEach((appState, i) => {
+    const app = App.get(appState.appName)
+    if (!app) {
+      missingApps.push(appState.appName)
+    }
+  })
+
+  if (missingApps.length > 0) {
+    Phoenix.notify(`Missing apps: ${missingApps.join(', ')}`)
+    return
   }
-});
 
-onKey('delete', modKey, () => {
-  let window = Window.focused();
-  if (window) {
-    getActiveWorkspace().removeWindow(window);
-  }
-});
-
-onKey('c', modKeyShift, () => {
-  let window = Window.focused();
-  window?.close();
-});
-
-// Render focused window's workspace.
-onKey('space', modKey, () => {
-  let focused = Window.focused();
-  if (!focused) {
-    return;
-  }
-  let ws = workspaces.find(ws => focused && ws.findIndex(focused) != -1);
-  if (ws) {
-    getActiveScreen().activateWorkspace(ws.id);
-  } else {
-    getActiveScreen().vlog('No workspace for ' + focused.title(), false);
-  }
-});
-
-// Rerender current screens.
-onKey('space', modKeyShift, () => {
-  let window = Window.focused();
-  for (let s of screens) {
-    s.workspace?.render();
-    s.vlog('Rerendered');
-  }
-  focusWindow(window);
-});
-
-onKey('r', modKey, () => {
-  getActiveWorkspace().spin();
-});
-
-onKey('r', modKeyShift, () => {
-  let oldMousePos = Mouse.location();
-  let screenWorkspaces = screens.map(s => s.workspace as Workspace);
-  let back = screenWorkspaces.shift() as Workspace;
-  screenWorkspaces.push(back);
-  log(screenWorkspaces.map(w => w.id));
-  screens.forEach((screen, i) => {
-    log('setting SCREEN:' + screen.id + ' WINDOW: ' + screenWorkspaces[i].id);
-    screen.setWorkspace(screenWorkspaces[i].id);
-  });
-  screens.forEach((screen) => {
-    log('rendering SCREEN:' + screen.id + ' WINDOW: ' + screen.workspace?.id);
-    screen.workspace?.render();
-  });
-  Mouse.move(oldMousePos);
-});
-
-
-onKey('m', modKey, () => {
-  setMouseMoveFocus(!mouseMoveFocus);
-});
-
-onKey('a', modKey, () => {
-  setAutoAddWindows(!autoAddWindows);
-});
-
-
-for (let i = 0; i <= 9; i++) {
-  onKey(i.toString(), modKey, () => {
-    let ws = workspaces[i];
-    if (ws.screen) {
-      let focused = Window.focused();
-      let focusedScreen = getActiveScreen();
-      log(focusedScreen.id);
-      log(focused?.title());
-      if (ws.screen !== focusedScreen) {
-        ws.screen.vlog('Here ');
-        focusedScreen.vlog('Already Showing ' + ws.id, false);
-      } else {
-        focusedScreen.vlog('This is');
+  sortedAppStates.forEach((appState, i) => {
+    const app = App.get(appState.appName)
+    if (!app) {
+      return
+    }
+    const appMainWindow = app?.mainWindow()
+    setTimeout(() => {
+      if (appMainWindow.isFullScreen()) {
+        appMainWindow.focus()
+        appMainWindow.setFullScreen(false)
       }
-      ws.render();
-      if (focusedScreen === ws.screen) {
-        log(focusedScreen.id);
-        focusWindow(ws.windows[0]);
+    }, i * 1000)
+  })
+
+  sortedAppStates.forEach((appState, i) => {
+    const app = App.get(appState.appName)
+    if (!app) {
+      return
+    }
+    const appMainWindow = app?.mainWindow()
+    setTimeout(() => {
+      moveApp(app, appState, appMainWindow, screenCnt)
+    }, (i + sortedAppStates.length) * 1000)
+  })
+
+  sortedAppStates.forEach((appName, i) => {
+    const app = App.get(appName.appName)
+    if (!app) {
+      return
+    }
+    const appMainWindow = app?.mainWindow()
+    setTimeout(() => {
+      if (appName.allowFullScreen) {
+        appMainWindow.focus()
+        appMainWindow.setFullScreen(true)
       } else {
-        log(focused?.title());
-        focusWindow(focused);
+        appMainWindow.maximize()
       }
-
-      return;
-    }
-    getActiveScreen().activateWorkspace(i);
-  });
-  onKey(i.toString(), modKeyShift, () => {
-    moveFocusedWindowToWorkspace(i);
-  });
+      if (i === sortedAppStates.length - 1) {
+        setTimeout(() => {
+          Phoenix.notify('Finish Rearrange Workspace')
+          console.log('Finish Rearrange Workspace')
+          console.log(new Date().toLocaleTimeString())
+          postRearrangeWorkspace(focusApps, screenCnt)
+        }, 1000);
+      }
+    }, (i + sortedAppStates.length * 2) * 1000)
+  })
 }
 
-function focusNextWindow(dir = 1) {
-  let window = Window.focused();
-  if (!window) {
-    // TODO use mouse to figure our current screen?
-    let screen = getActiveScreen();
-    if (screen.workspace)
-      screen.activateWorkspace(screen.workspace.id);
-    return;
+const moveApp = (app: App, appStates: AppState, appMainWindow: Window, screenCnt: number) => {
+  if (screenCnt === 1) {
+    Space.all().forEach(space => {
+      // @ts-ignore
+      space.moveWindows([appMainWindow])
+      return
+    })
+  } else {
+    Space.all().forEach(space => {
+      if (space?.screens()[0]?.identifier() === appStates.screenIdentifier) {
+        // @ts-ignore
+        space.moveWindows([appMainWindow])
+        return
+      }
+    })
   }
-  let hash = window.hash();
-  let workspace = windowMap.get(hash);
-  if (!workspace) {
-    return;
-  }
-  let windows = workspace.windows;
-  focusWindow(windows[(workspace.findIndex(window) + dir + windows.length) % windows.length]);
 }
 
-Event.on('screensDidChange', () => {
-  initScreens();
-});
-
-Event.on('windowDidClose', (w) => {
-  let ws = windowMap.get(w.hash());
-  if (!ws) {
-    return;
-  }
-  log('windowDidClose ' + w.title() + ' APPNAME: ' + w.app().name() + ' HASH: ' + w.hash() + ' removing from: ' + ws.id);
-  ws.removeWindow(w);
-});
-
-Event.on('windowDidOpen', (w) => {
-  log('windowDidOpen ' + w.title() + ' APPNAME: ' + w.app().name() + ' HASH: ' + w.hash() + ' adding to: ' + getActiveWorkspace().id);
-  if (!w.isVisible() || windowMap.get(w.hash())) {
-    return;
-  }
-  log('windowDidOpen ' + w.title() + ' APPNAME: ' + w.app().name() + ' HASH: ' + w.hash() + ' adding to: ' + getActiveWorkspace().id);
-  // Phoenix modals shouldn't be part of our system.
-  if (w.app().name() != 'Phoenix') {
-    getActiveWorkspace().addWindow(w, true);
-  }
-});
-
-Event.on('appDidLaunch', (a) => {
-    log('appDidLaunch ' +a.name() + ' HASH: ' + a.hash() + ' adding to: ' + getActiveWorkspace().id);
-    for (let w of a.windows()) {
-    if (!w.isVisible() || windowMap.get(w.hash())) {
-      return;
+const postRearrangeWorkspace = (focusApps: string[], screenCnt: number) => {
+  focusApps.forEach((focusApp, i) => {
+    if (screenCnt === 1 && i > 0) {
+      return
     }
-    log('appDidLaunch ' + w.title() + ' APPNAME: ' + w.app().name() + ' HASH: ' + w.hash() + ' adding to: ' + getActiveWorkspace().id);
-    // Phoenix modals shouldn't be part of our system.
-    if (w.app().name() != 'Phoenix') {
-      getActiveWorkspace().addWindow(w, true);
+    const app = App.get(focusApp)
+    if (!app) {
+      return
     }
-  }
-});
+    const appMainWindow = app?.mainWindow()
+    setTimeout(() => {
+      appMainWindow.focus()
+    }, i * 1000)
+  })
+}
 
-Event.on('appDidTerminate', (a) => {
-  for (let w of a.windows()) {
-    let ws = windowMap.get(w.hash());
-    if (!ws) {
-      return;
-    }
-    log('appDidTerminate ' + w.title() + ' APPNAME: ' + w.app().name() + ' HASH: ' + w.hash() + ' removing from: ' + ws.id);
-    ws.removeWindow(w);
-  }
-});
+// Key.on('w', ['command', 'control', 'shift'], () => {
+const run = () => {
+  const mainScreenIdentifier = '37D8832A-2D66-02CA-B9F7-8F30A301B230'
+  const secondScreenIdentifier = 'E554CC5F-E7D1-9A9F-0857-D6964E3302DB'
 
-Event.on('mouseDidMove', (p: any) => {
-  if (!mouseMoveFocus || p.modifiers.find((m: string) => m === modKey[0])) {
-    return;
-  }
+  const screenCnt = Screen.all().length
+  const checkScreenIdentifier = screenCnt === 2 ? secondScreenIdentifier : mainScreenIdentifier
 
-  let w = Window.recent().find(w => pointInsideFrame(p, w.frame()));
-  w?.focus();
-});
+  const focusApps = ['Slack', 'Google Chrome']
+  const appState: AppState[] = [
+    {
+      allowFullScreen: true,
+      appName: 'Postman',
+      screenIdentifier: mainScreenIdentifier,
+      singleScreenOrder: 0,
+      dualScreenOrder: 2
+    },
+    {
+      allowFullScreen: true,
+      appName: 'DataGrip',
+      screenIdentifier: mainScreenIdentifier,
+      singleScreenOrder: 1,
+      dualScreenOrder: 1
+    },
+    {
+      allowFullScreen: true,
+      appName: 'Code',
+      screenIdentifier: checkScreenIdentifier,
+      singleScreenOrder: 2,
+      dualScreenOrder: 4
+    },
+    {
+      allowFullScreen: screenCnt === 2 ? false : true,
+      appName: 'Google Chrome',
+      screenIdentifier: checkScreenIdentifier,
+      singleScreenOrder: 3,
+      dualScreenOrder: 3
+    },
+    {
+      allowFullScreen: true,
+      appName: 'Slack',
+      screenIdentifier: mainScreenIdentifier,
+      singleScreenOrder: 4,
+      dualScreenOrder: 0
+    },
+    {
+      allowFullScreen: true,
+      appName: 'Stoplight Studio',
+      screenIdentifier: checkScreenIdentifier,
+      singleScreenOrder: 5,
+      dualScreenOrder: 5
+    },
+    {
+      allowFullScreen: true,
+      appName: 'Telegram',
+      screenIdentifier: checkScreenIdentifier,
+      singleScreenOrder: 6,
+      dualScreenOrder: 6
+    },
+  ]
+  Phoenix.notify('Start Rearrange Workspace')
+  console.log('Start Rearrange Workspace')
+  console.log(new Date().toLocaleTimeString())
+  rearrangeWorkspace(appState, focusApps, screenCnt)
+}
+// })
 
-// Debug keys.
-onKey('`', modKey, () => {
-  for (let s of screens) {
-    for (let w of s.workspace?.windows || []) {
-      const m = new Modal();
-      m.text = (s.workspace?.id.toString() || '') + ' ' + w.title();
-      m.duration = 3;
-      m.icon = w.app().icon();
-      let modalBounds = m.frame();
-      let windowBounds = w.frame();
-      let origin = center(windowBounds);
-      let screenBounds = s.screen.flippedFrame();
-      let y = origin.y - screenBounds.y;
-      y = screenBounds.height - y;
-      origin.x -= modalBounds.width / 2;
-      origin.y = y - modalBounds.height + s.screen.frame().y;
-      m.origin = origin;
-      m.show();
-    }
-  }
-});
-
-onKey('`', modKeyShift, () => {
-  let w = Window.focused();
-  if (!w) {
-    return;
-  }
-  log('=============================================================');
-  log(w.hash() + ' - ' + w.app.name + ' - ' + w.title());
-  let loadState = Storage.get('state');
-  log(loadState);
-  log('=============================================================');
-});
+run()

@@ -1,15 +1,14 @@
+const os = require('os');
 const path = require('path');
 const webpack = require('webpack');
-const {CleanWebpackPlugin} = require('clean-webpack-plugin');
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 
 module.exports = {
 	entry: {
-		'phoenix.js': './src/phoenix.ts',
-		'phoenix.debug.js': './src/phoenix.ts',
+		'.phoenix.js': './src/phoenix.ts'
 	},
 	output: {
-		path: path.resolve(__dirname, 'out'),
+		path: os.homedir(),
 		filename: '[name]',
 	},
 	resolve: {
@@ -29,7 +28,6 @@ module.exports = {
 	},
 	plugins: [
 		new webpack.ProgressPlugin(),
-		new CleanWebpackPlugin(),
 		new ForkTsCheckerWebpackPlugin(),
 	],
 };
