@@ -52,7 +52,7 @@ const rearrangeWorkspace = (appStates: AppState[], focusApps: string[], screenCn
     }
     const appMainWindow = app?.mainWindow()
     setTimeout(() => {
-      moveApp(app, appState, appMainWindow, screenCnt)
+      moveApp(appState, appMainWindow, screenCnt)
     }, (i + sortedAppStates.length) * 1000)
   })
 
@@ -81,7 +81,7 @@ const rearrangeWorkspace = (appStates: AppState[], focusApps: string[], screenCn
   })
 }
 
-const moveApp = (app: App, appStates: AppState, appMainWindow: Window, screenCnt: number) => {
+const moveApp = (appStates: AppState, appMainWindow: Window, screenCnt: number) => {
   if (screenCnt === 1) {
     Space.all().forEach(space => {
       // @ts-ignore
@@ -123,7 +123,8 @@ const run = () => {
   const screenCnt = Screen.all().length
   const checkScreenIdentifier = screenCnt === 2 ? secondScreenIdentifier : mainScreenIdentifier
 
-  const focusApps = ['Slack', 'Google Chrome']
+  const defaultBrowser = 'Arc'
+  const focusApps = ['Slack', defaultBrowser]
   const appState: AppState[] = [
     {
       allowFullScreen: true,
@@ -148,7 +149,7 @@ const run = () => {
     },
     {
       allowFullScreen: screenCnt === 2 ? false : true,
-      appName: 'Google Chrome',
+      appName: defaultBrowser,
       screenIdentifier: checkScreenIdentifier,
       singleScreenOrder: 3,
       dualScreenOrder: 3
